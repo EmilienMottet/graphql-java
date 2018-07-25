@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 @WebServlet(urlPatterns = "/graphql")
 public class GraphQLEndpoint extends SimpleGraphQLServlet {
-
+  private static final VoteRepository voteRepository;
   private static final LinkRepository linkRepository;
   private static final UserRepository userRepository;
 
@@ -21,6 +21,7 @@ public class GraphQLEndpoint extends SimpleGraphQLServlet {
     MongoDatabase mongo = new MongoClient().getDatabase("hackernews");
     linkRepository = new LinkRepository(mongo.getCollection("links"));
     userRepository = new UserRepository(mongo.getCollection("users"));
+    voteRepository = new VoteRepository(mongo.getCollection("votes"));
   }
 
   public GraphQLEndpoint() {
@@ -32,9 +33,11 @@ public class GraphQLEndpoint extends SimpleGraphQLServlet {
         .file("schema.graphqls")
         .resolvers(
             new Query(linkRepository),
-            new Mutation(linkRepository, userRepository),
+            new Mutation(linkRepository, userRepository,voteRepository),
             new SigninResolver(),
-            new LinkResolver(userRepository))
+            new LinkResolver(userRepository),
+            new VoteResolver(linkRepository, userRepository)) // new resolver )
+        .scalars(Scalars.dateTime)
         .build()
         .makeExecutableSchema();
   }
@@ -52,5 +55,4 @@ public class GraphQLEndpoint extends SimpleGraphQLServlet {
             .orElse(null);
     return new AuthContext(user, request, response);
   }
-
 }
