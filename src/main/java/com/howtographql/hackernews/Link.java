@@ -3,17 +3,17 @@ package com.howtographql.hackernews;
 public class Link {
   private final String id;
   private final String url;
-  private final String descritpion;
+  private final String description;
   private final String userId;
 
-  public Link(String url, String descritpion, String userId) {
-    this(null, url, descritpion, userId);
+  public Link(String url, String description, String userId) {
+    this(null, url, description, userId);
   }
 
-  public Link(String id, String url, String descritpion, String userId) {
+  public Link(String id, String url, String description, String userId) {
     this.id = id;
     this.url = url;
-    this.descritpion = descritpion;
+    this.description = description;
     this.userId = userId;
   }
 
@@ -22,7 +22,7 @@ public class Link {
   }
 
   public String getDescription() {
-    return descritpion;
+    return description;
   }
 
   public String getId() {
@@ -32,4 +32,5 @@ public class Link {
   public String getUserId() {
     return userId;
   }
+
 }

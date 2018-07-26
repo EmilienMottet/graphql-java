@@ -3,10 +3,14 @@ package com.howtographql.hackernews;
 import com.coxautodev.graphql.tools.SchemaParser;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoDatabase;
+import graphql.ExceptionWhileDataFetching;
+import graphql.GraphQLError;
 import graphql.schema.GraphQLSchema;
 import graphql.servlet.GraphQLContext;
 import graphql.servlet.SimpleGraphQLServlet;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -33,7 +37,7 @@ public class GraphQLEndpoint extends SimpleGraphQLServlet {
         .file("schema.graphqls")
         .resolvers(
             new Query(linkRepository),
-            new Mutation(linkRepository, userRepository,voteRepository),
+            new Mutation(linkRepository, userRepository, voteRepository),
             new SigninResolver(),
             new LinkResolver(userRepository),
             new VoteResolver(linkRepository, userRepository)) // new resolver )
@@ -45,6 +49,7 @@ public class GraphQLEndpoint extends SimpleGraphQLServlet {
   @Override
   protected GraphQLContext createContext(
       Optional<HttpServletRequest> request, Optional<HttpServletResponse> response) {
+    System.out.println("here");
 
     User user =
         request
@@ -54,5 +59,21 @@ public class GraphQLEndpoint extends SimpleGraphQLServlet {
             .map(userRepository::findById)
             .orElse(null);
     return new AuthContext(user, request, response);
+  }
+
+  @Override
+  protected List<GraphQLError> filterGraphQLErrors(List<GraphQLError> errors) {
+    for (GraphQLError error : errors) {
+      System.out.println("error : " + error);
+    }
+    return errors
+        .stream()
+        .filter(e -> e instanceof ExceptionWhileDataFetching || super.isClientError(e))
+        .map(
+            e ->
+                e instanceof ExceptionWhileDataFetching
+                    ? new SanitizedError((ExceptionWhileDataFetching) e)
+                    : e)
+        .collect(Collectors.toList());
   }
 }
